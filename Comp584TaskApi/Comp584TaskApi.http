@@ -1,0 +1,6 @@
+@Comp584TaskApi_HostAddress = http://localhost:5161
+
+GET {{Comp584TaskApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

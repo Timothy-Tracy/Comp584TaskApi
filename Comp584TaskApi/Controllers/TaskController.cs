@@ -10,6 +10,12 @@ using DataModel;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using comp584webapi.DTO;
+using Microsoft.AspNetCore.Authorization;
+using Comp584TaskApi.DTO;
+using System.Security.Claims;
+using Microsoft.AspNet.Identity;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Serilog;
 
 namespace Comp584TaskApi.Controllers
 {
@@ -20,40 +26,138 @@ namespace Comp584TaskApi.Controllers
         private readonly TaskdbContext _context = context;
 
         [HttpGet]
-        public async Task<ActionResult<IList<TaskDTO>>> GetCities()
+        [Authorize]
+        public async Task<ActionResult<IList<TaskDTO>>> GetTasks()
         {
-            IQueryable<TaskDTO> x = _context.Tasks.Select(t => new TaskDTO
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            { // If the user ID is not found,
+                return Unauthorized("User ID not found.");
+            }
+            IQueryable<TaskDTO> x = _context.TaskObjects.Where(x => x.UserId == userId).Select(t => new TaskDTO
             {
                 Id = t.Id,
-                Body = t.Body,
-                Complete = t.Complete
-                
-
-            }).Take(100);
+                Complete = t.Complete,
+                Body = t.Body 
+            }) .Take(100);
             return await x.ToListAsync();
         }
 
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<DataModel.Task>> GetCity(int id)
+        [Authorize]
+        public async Task<ActionResult<DataModel.TaskObject>> GetTask(int id)
         {
-            DataModel.Task? task = await _context.Tasks.FindAsync(id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            { // If the user ID is not found,
+                return Unauthorized("User ID not found.");
+            }
+            DataModel.TaskObject? task = await _context.TaskObjects.FindAsync(id);
+
+            if (task == null)
+            {
+                return NotFound();
+            }
+            if (task.UserId != userId)
+            {
+                return Unauthorized();
+            }
+
+            return task;
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<ActionResult<DataModel.TaskObject>> DeleteTask(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            { // If the user ID is not found,
+                return Unauthorized("User ID not found.");
+            }
+            DataModel.TaskObject? task = await _context.TaskObjects.FindAsync(id);
+            
+
+            if (task == null)
+            {
+                return NotFound();
+            }
+            if (task.UserId != userId)
+            {
+                return Unauthorized();
+            }
+
+            _context.TaskObjects.Remove(task);
+            await _context.SaveChangesAsync();
+            return NoContent(); ;
+        }
+
+
+
+
+
+
+        [HttpPost]
+        [Authorize]
+        public async Task<ActionResult<TaskRequest>> PostTask(TaskRequest task)
+        {
+            // Retrieve the user ID of the currently authenticated user
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); 
+        
+            if (userId == null)
+            { // If the user ID is not found,
+              return Unauthorized("User ID not found."); 
+            }
+              // Create a new TaskObject and assign the user ID
+                var taskObject = new TaskObject { UserId = userId, Body = task.Body, 
+            // Add other properties as necessary
+            }; 
+            // Add the new TaskObject to the context
+            _context.TaskObjects.Add(taskObject); 
+            await _context.SaveChangesAsync(); 
+            return CreatedAtAction("GetTask", new { id = taskObject.Id }, taskObject);
+        }
+        [Route("/status")]
+        [HttpGet]
+        [Authorize]
+        public async Task<ActionResult> GetStatus()
+        {
+            // Retrieve the user ID of the currently authenticated user
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Console.WriteLine(userId);
+            Console.WriteLine("Hello World");
+            Log.Information("Hello World");
+            Log.Information(User.Identity.GetUserId());
+            //Console.WriteLine(userId);
+            return Ok();
+
+
+        }
+
+        
+        
+        [HttpGet("/toggle/{id}")]
+        [Authorize]
+        public async Task<ActionResult<DataModel.TaskObject>> ToggleTaskComplete(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            DataModel.TaskObject? task = await _context.TaskObjects.FindAsync(id);
 
             if (task == null)
             {
                 return NotFound();
             }
 
+            if (task.UserId != userId)
+            {
+                return Unauthorized();
+            }
+            task.Complete = !task.Complete;
+            _context.SaveChanges();
             return task;
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<DataModel.Task>> PostTask(DataModel.Task task)
-        {
-            _context.Tasks.Add(task);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetTask", new { id = task.Id }, task);
         }
 
 

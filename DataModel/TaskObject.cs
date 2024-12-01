@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataModel;
 
-[Table("Task")]
-public partial class Task
+[Table("TaskObject")]
+public partial class TaskObject
 {
     [Key]
     [Column("id")]
@@ -20,4 +21,12 @@ public partial class Task
 
     [Column("complete")]
     public bool Complete { get; set; }
+
+    [Column("userId")]
+    [StringLength(450)]
+    public string UserId { get; set; } = null!;
+
+    [ForeignKey("UserId")]
+    [InverseProperty("TaskObjects")]
+    public virtual AppUser User { get; set; } = null!;
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataModel;
@@ -23,10 +22,8 @@ public partial class TaskObject
     public bool Complete { get; set; }
 
     [Column("userId")]
-    [StringLength(450)]
-    public string UserId { get; set; } = null!;
+    public string? UserId { get; set; }
 
-    [ForeignKey("UserId")]
-    [InverseProperty("TaskObjects")]
-    public virtual AppUser User { get; set; } = null!;
+    [Column("categoryId")]
+    public int? CategoryId { get; set; }
 }

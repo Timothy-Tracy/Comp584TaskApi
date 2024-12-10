@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataModel;
@@ -23,7 +22,7 @@ public partial class Category
     [StringLength(450)]
     public string UserId { get; set; } = null!;
 
-    [ForeignKey("UserId")]
-    [InverseProperty("Categories")]
-    public virtual AppUser User { get; set; } = null!;
+    [Column("AppUserId")]
+    [StringLength(450)]
+    public string AppUserId { get; set; } = null!;
 }

@@ -38,8 +38,27 @@ namespace Comp584TaskApi.Controllers
             {
                 Id = t.Id,
                 Complete = t.Complete,
-                Body = t.Body 
+                Body = t.Body,
+                CategoryId = t.CategoryId,
             }) .Take(100);
+            return await x.ToListAsync();
+        }
+        [HttpGet("category/{id}")]
+        [Authorize]
+        public async Task<ActionResult<IList<TaskDTO>>> GetTasksByCategory(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            { // If the user ID is not found,
+                return Unauthorized("User ID not found.");
+            }
+            IQueryable<TaskDTO> x = _context.TaskObjects.Where(x => x.UserId == userId && x.CategoryId == id).Select(t => new TaskDTO
+            {
+                Id = t.Id,
+                Complete = t.Complete,
+                Body = t.Body,
+                CategoryId = t.CategoryId,
+            }).Take(100);
             return await x.ToListAsync();
         }
 
@@ -111,8 +130,23 @@ namespace Comp584TaskApi.Controllers
             { // If the user ID is not found,
               return Unauthorized("User ID not found."); 
             }
-              // Create a new TaskObject and assign the user ID
-                var taskObject = new TaskObject { UserId = userId, Body = task.Body, 
+            if (task.CategoryId != null)
+            {
+                Category? category = await _context.Categories.FindAsync(task.CategoryId);
+
+                if (category == null)
+                {
+                    return NotFound("Category Not Found");
+                }
+                if (category.UserId != userId)
+                {
+                    return Unauthorized("");
+                }
+            }
+
+            
+            // Create a new TaskObject and assign the user ID
+            var taskObject = new TaskObject { UserId = userId, Body = task.Body, CategoryId = task.CategoryId
             // Add other properties as necessary
             }; 
             // Add the new TaskObject to the context
@@ -120,6 +154,106 @@ namespace Comp584TaskApi.Controllers
             await _context.SaveChangesAsync(); 
             return CreatedAtAction("GetTask", new { id = taskObject.Id }, taskObject);
         }
+
+        [HttpPut("{id}")]
+        [Authorize]
+        public async Task<ActionResult<TaskRequest>> UpdateTask(int id, UpdateTaskBody req)
+        {
+            // Retrieve the user ID of the currently authenticated user
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            { // If the user ID is not found,
+                return Unauthorized("User ID not found.");
+            }
+
+            DataModel.TaskObject? task = await _context.TaskObjects.FindAsync(id);
+
+            if (task == null)
+            {
+                return NotFound();
+            }
+            if (task.UserId != userId)
+            {
+                return Unauthorized();
+            }
+            task.Body = req.Body;
+
+       
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetTask", new { id = task.Id }, task);
+        }
+
+        [HttpPost("category")]
+        
+        [Authorize]
+        public async Task<ActionResult<TaskRequest>> PostTaskToCategory(TaskCategoryRequestParameter req)
+        {
+            // Retrieve the user ID of the currently authenticated user
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            { // If the user ID is not found,
+                return Unauthorized("User ID not found.");
+            }
+            DataModel.TaskObject? task = await _context.TaskObjects.FindAsync(req.TaskId);
+
+            if (task == null)
+            {
+                return NotFound();
+            }
+            if (task.UserId != userId)
+            {
+                return Unauthorized();
+            }
+
+
+            Category? category = await _context.Categories.FindAsync(req.CategoryId);
+
+            if (category == null)
+            {
+                return NotFound();
+            }
+            if (category.UserId != userId)
+            {
+                return Unauthorized();
+            }
+
+            // Add the new TaskObject to the context
+            task.CategoryId = category.Id;
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetTask", new { id = req.TaskId }, task);
+        }
+
+        
+        [HttpDelete("category/{id}")]
+        [Authorize]
+        public async Task<ActionResult<TaskRequest>> RemoveTaskFromCategory(int id)
+        {
+            // Retrieve the user ID of the currently authenticated user
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            { // If the user ID is not found,
+                return Unauthorized("User ID not found.");
+            }
+            DataModel.TaskObject? task = await _context.TaskObjects.FindAsync(id);
+
+            if (task == null)
+            {
+                return NotFound();
+            }
+            if (task.UserId != userId)
+            {
+                return Unauthorized();
+            }
+            task.CategoryId = null;
+
+
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetTask", new { id = id }, task);
+        }
+
         [Route("/status")]
         [HttpGet]
         [Authorize]

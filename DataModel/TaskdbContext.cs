@@ -27,6 +27,7 @@ public partial class TaskdbContext : IdentityDbContext<AppUser>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<TaskObject>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_Task");

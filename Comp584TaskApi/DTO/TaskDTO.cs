@@ -8,6 +8,7 @@ namespace comp584webapi.DTO
     {
 
         public int Id { get; set; }
+        public int? CategoryId { get; set; } 
         public string Body { get; set; } = null!;
         public bool Complete { get; set; }
        

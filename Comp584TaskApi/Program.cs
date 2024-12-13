@@ -109,7 +109,7 @@ var app = builder.Build();
 app.UseCors(policy => policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseDeveloperExceptionPage();
 app.MapControllers();
 
 app.Run();

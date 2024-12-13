@@ -59,7 +59,7 @@ namespace Comp584TaskApi.Controllers
 
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<ActionResult<CategoryPost>> UpdateTask(int id, CategoryPost req)
+        public async Task<ActionResult<CategoryPost>> UpdateCategory(int id, CategoryPost req)
         {
             // Retrieve the user ID of the currently authenticated user
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -83,7 +83,7 @@ namespace Comp584TaskApi.Controllers
 
 
             await _context.SaveChangesAsync();
-            return CreatedAtAction("GetTask", new { id = category.Id }, category);
+            return CreatedAtAction("GetCategory", new { id = category.Id }, category);
         }
 
         [HttpDelete("{id}")]
@@ -114,7 +114,7 @@ namespace Comp584TaskApi.Controllers
         }
 
 
-        [HttpPost]
+        [HttpPost()]
         [Authorize]
         public async Task<ActionResult<CategoryPost>> PostCategory(CategoryPost category)
         {

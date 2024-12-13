@@ -273,7 +273,7 @@ namespace Comp584TaskApi.Controllers
 
         
         
-        [HttpGet("/toggle/{id}")]
+        [HttpGet("toggle/{id}")]
         [Authorize]
         public async Task<ActionResult<DataModel.TaskObject>> ToggleTaskComplete(int id)
         {

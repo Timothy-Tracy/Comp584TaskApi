@@ -20,12 +20,12 @@ namespace Comp584TaskApi.Controllers
 
             if (user == null)
             {
-                return Unauthorized("Bad Username");
+                return Unauthorized(new { message = "Bad Username" });
             }
             bool success = await userManager.CheckPasswordAsync(user, request.Password);
             if (!success)
             {
-                return Unauthorized("Bad Password");
+                return Unauthorized(new { message = "Bad Password" });
             }
 
             JwtSecurityToken token = await handler.GetSecurityTokenAsync(user);
